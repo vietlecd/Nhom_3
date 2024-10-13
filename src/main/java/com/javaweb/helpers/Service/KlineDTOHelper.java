@@ -1,34 +1,35 @@
 package com.javaweb.helpers.Service;
 
-import com.javaweb.model.KlineDTO;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.javaweb.dto.KlineDTO;
 
-public class UpdateKline {
-    private final Map<String, KlineDTO> priceDataMap = new ConcurrentHashMap<>();
-    public void updateKlineData(String symbol, String openPrice, String closePrice, String highPrice, String lowPrice, String volume, String numberOfTrades,
-                                String isKlineClosed,
-                                String baseAssetVolume,
-                                String takerBuyVolume,
-                                String takerBuyBaseVolume,
-                                String eventTime,
-                                String klineStartTime,
-                                String klineCloseTime ) {
-        priceDataMap.put(symbol.toUpperCase(), new KlineDTO(symbol,
-                openPrice,
-                closePrice,
-                highPrice,
-                lowPrice,
-                volume,
-                numberOfTrades,
-                isKlineClosed,
-                baseAssetVolume,
-                takerBuyVolume,
-                takerBuyBaseVolume,
-                eventTime,
-                klineStartTime,
-                klineCloseTime));
+public class KlineDTOHelper {
+
+    public static KlineDTO createKlineDTO(String symbol, String openPrice, String closePrice, String highPrice, String lowPrice, String volume, String numberOfTrades,
+                                          String isKlineClosed,
+                                          String baseAssetVolume,
+                                          String takerBuyVolume,
+                                          String takerBuyBaseVolume,
+                                          String eventTime,
+                                          String klineStartTime,
+                                          String klineCloseTime ) {
+        return new KlineDTO.Builder()
+                .symbol(symbol)
+                .eventTime(eventTime)
+                .openPrice(openPrice)
+                .closePrice(closePrice)
+                .highPrice(highPrice)
+                .lowPrice(lowPrice)
+                .volume(volume)
+                .numberOfTrades(numberOfTrades)
+                .isKlineClosed(isKlineClosed)
+                .baseAssetVolume(baseAssetVolume)
+                .takerBuyBaseVolume(takerBuyBaseVolume)
+                .takerBuyVolume(takerBuyVolume)
+                .klineCloseTime(klineCloseTime)
+                .klineStartTime(klineStartTime)
+
+                .build();
     }
 
 }

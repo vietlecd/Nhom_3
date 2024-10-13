@@ -1,2 +1,10 @@
-package com.javaweb.connect;public interface IKlineWebSocketService {
+package com.javaweb.connect;
+
+import java.util.List;
+
+public interface IKlineWebSocketService {
+
+    void connectToKlineWebSocket(List<String> streams);
+
+    //void closeWebSocket();
 }

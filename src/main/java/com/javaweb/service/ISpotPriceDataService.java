@@ -7,7 +7,9 @@ import java.util.Map;
 
 public interface ISpotPriceDataService {
 
-    void handleSpotWebSocketMessage(JsonNode data);
+
 
     Map<String, PriceDTO> getSpotPriceDataMap();
+
+    void handleSpotWebSocketMessage(JsonNode data);
 }

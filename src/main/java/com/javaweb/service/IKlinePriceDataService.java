@@ -1,14 +1,14 @@
 package com.javaweb.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.javaweb.dto.PriceDTO;
-import com.javaweb.model.KlineDTO;
+import com.javaweb.dto.KlineDTO;
+
 
 import java.util.Map;
 
-public interface IKlineService {
+public interface IKlinePriceDataService {
 
-    void handleSpotWebSocketMessage(JsonNode data);
+    void handleKlineWebSocketMessage(JsonNode data);
 
     Map<String, KlineDTO> getKlineDataMap();
 }
