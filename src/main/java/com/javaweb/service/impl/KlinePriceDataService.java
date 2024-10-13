@@ -3,20 +3,23 @@ package com.javaweb.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaweb.controller.KlineController;
-import com.javaweb.service.IKlineService;
+import com.javaweb.dto.KlineDTO;
+import com.javaweb.dto.PriceDTO;
+import com.javaweb.helpers.Service.PriceDTOHelper;
+import com.javaweb.model.KlineDTO;
+import com.javaweb.service.IKlinePriceDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
-public class KlineService extends TextWebSocketHandler implements IKlineService {
+public class KlinePriceDataPriceDataService extends TextWebSocketHandler implements IKlinePriceDataService {
 
+    private final Map<String, PriceDTO> KlinePriceDataMap = new ConcurrentHashMap<
     @Autowired
     private KlineController klineController;
 
@@ -24,30 +27,7 @@ public class KlineService extends TextWebSocketHandler implements IKlineService 
     private WebSocketSession webSocketSession;
 
     // Thay đổi để hỗ trợ kline thay vì ticker
-    private String buildWebSocketUrl(List<String> streams) {
-        // Create the stream parameter with the correct format and kline interval (e.g., kline_1m)
-        String streamParam = streams.stream()
-                .map(s -> s.toLowerCase() + "@kline_1m") // Ensure lowercase and append "@kline_1m"
-                .collect(Collectors.joining("/")); // Join streams with "/"
 
-        // Return the constructed URL using the base URL wss://fstream.binance.com
-        return "wss://fstream.binance.com/stream?streams=" + streamParam;
-    }
-
-
-
-    @Override
-    public void connectToWebSocket(List<String> streams) {
-        String wsUrl = buildWebSocketUrl(streams);
-
-        StandardWebSocketClient client = new StandardWebSocketClient();
-        try {
-            this.webSocketSession = client.doHandshake(this, wsUrl).get();
-            System.out.println("Connected to Binance WebSocket at: " + wsUrl);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -99,34 +79,11 @@ public class KlineService extends TextWebSocketHandler implements IKlineService 
                 ", Kline Start Time: " + klineStartTime +
                 ", Kline Close Time: " + klineCloseTime);
 
-        // Giả sử apiController được cập nhật để xử lý dữ liệu Kline
-        klineController.updateKlineData(
-                symbol,
-                openPrice,
-                closePrice,
-                highPrice,
-                lowPrice,
-                volume,
-                numberOfTrades,
-                isKlineClosed,
-                baseAssetVolume,
-                takerBuyVolume,
-                takerBuyBaseVolume,
-                eventTime,
-                klineStartTime,
-                klineCloseTime
-        );
-    }
+        KlineDTO klineDTO = PriceDTOHelper.createKlineDTO(symbol, openPrice, closePrice, highPrice, lowPrice, volume, numberOfTrades, isKlineClosed, baseAssetVolume, takerBuyVolume, takerBuyBaseVolume, eventTime, klineStartTime, klineCloseTime);
+        KlinePriceDataMap.put("SpotPrice:", klineDTO);
 
-    @Override
-    public void closeWebSocket() {
-        if (this.webSocketSession != null && this.webSocketSession.isOpen()) {
-            try {
-                this.webSocketSession.close();
-                System.out.println("WebSocket session closed.");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+    }
+    public Map<String, KlineDTO> getKlineDataMap(){
+        return KlinePriceDataMap;
     }
 }
