@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaweb.config.WebSocketConfig;
 import com.javaweb.connect.IKlineWebSocketService;
-import com.javaweb.connect.ISpotWebSocketService;
+
 import com.javaweb.service.IKlinePriceDataService;
 import com.javaweb.service.ISpotPriceDataService;
 import org.springframework.beans.factory.annotation.Autowired;

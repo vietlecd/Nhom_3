@@ -2,10 +2,14 @@ package com.javaweb.controller;
 
 
 import com.javaweb.config.WebSocketConfig;
+
+
 import com.javaweb.dto.KlineDTO;
+import com.javaweb.dto.PriceDTO;
 import com.javaweb.helpers.Sse.SseHelper;
 import com.javaweb.connect.IKlineWebSocketService;
 import com.javaweb.service.IKlinePriceDataService;
+import com.javaweb.service.impl.KlinePriceDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -26,16 +30,21 @@ public class KlineController {
     private IKlineWebSocketService klineWebSocketService;
     @Autowired
     private IKlinePriceDataService IKlinePriceDataService;
-
+    @Autowired
+    private KlinePriceDataService klinePriceDataService;
     @GetMapping("/get-kline")
     public SseEmitter streamKlinePrices(@RequestParam List<String> symbols) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
 
         klineWebSocketService.connectToKlineWebSocket(symbols);
+        Map<String, KlineDTO> priceDataMap = klinePriceDataService.getKlineDataMap();
 
-        Map<String, KlineDTO> priceDataMap = IKlinePriceDataService.getKlineDataMap();
-        return sseHelper.createKlineSseEmitter(emitter, "kline", priceDataMap, webSocketConfig);
+        for (String symbol : symbols) {
+            sseHelper.createKlineSseEmitter(emitter, "Kline", symbol, priceDataMap, webSocketConfig);
+        }
+        return emitter;
     }
+
 
 
 }
