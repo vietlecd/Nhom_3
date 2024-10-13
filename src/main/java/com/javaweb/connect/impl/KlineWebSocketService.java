@@ -3,10 +3,16 @@ package com.javaweb.connect.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaweb.config.WebSocketConfig;
+<<<<<<< HEAD
 import com.javaweb.connect.IKlineWebSocketService;
 
 import com.javaweb.service.IKlinePriceDataService;
 import com.javaweb.service.ISpotPriceDataService;
+=======
+import com.javaweb.connect.IConnectToWebSocketService;
+import com.javaweb.service.impl.KlineDataService;
+import com.javaweb.service.impl.SpotPriceDataService;
+>>>>>>> 9afd360d4d882e38a47b62f4542c53eb5da010c4
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -18,10 +24,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+<<<<<<< HEAD
 public class KlineWebSocketService extends TextWebSocketHandler implements IKlineWebSocketService {
 
     @Autowired
     private IKlinePriceDataService klinePriceDataService;
+=======
+public class KlineWebSocketService extends TextWebSocketHandler implements IConnectToWebSocketService {
+    @Autowired
+    private KlineDataService klineDataService;
+>>>>>>> 9afd360d4d882e38a47b62f4542c53eb5da010c4
 
     @Autowired
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -35,6 +47,7 @@ public class KlineWebSocketService extends TextWebSocketHandler implements IKlin
 
 
     private String buildKlineWebSocketUrl(List<String> streams) {
+<<<<<<< HEAD
         // Create the stream parameter with the correct format and kline interval fixed at "1m"
         String streamParam = streams.stream()
                 .map(s -> s.toLowerCase() + "@kline_1m") // Ensure lowercase and append "@kline_1m"
@@ -47,6 +60,16 @@ public class KlineWebSocketService extends TextWebSocketHandler implements IKlin
 
     @Override
     public void connectToKlineWebSocket(List<String> streams) {
+=======
+        String streamParam = streams.stream()
+                .map(s -> s.toLowerCase() + "@kline_1s")
+                .collect(Collectors.joining("/"));
+        return "wss://stream.binance.com/stream?streams=" + streamParam;
+    }
+
+    @Override
+    public void connectToWebSocket(List<String> streams) {
+>>>>>>> 9afd360d4d882e38a47b62f4542c53eb5da010c4
         String wsUrl = buildKlineWebSocketUrl(streams);
         webSocketConfig.connectToWebSocket(wsUrl, webSocketClient, this);
     }
@@ -54,6 +77,7 @@ public class KlineWebSocketService extends TextWebSocketHandler implements IKlin
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
+<<<<<<< HEAD
         System.out.println("Received from Binance: " + payload);
 
         JsonNode data = objectMapper.readTree(payload).get("data");
@@ -66,4 +90,12 @@ public class KlineWebSocketService extends TextWebSocketHandler implements IKlin
 //        System.out.println("WebSocket closed from service.");
 //    }
 
+=======
+
+        JsonNode data = objectMapper.readTree(payload).get("data");
+
+        klineDataService.handleWebSocketMessage(data);
+    }
+
+>>>>>>> 9afd360d4d882e38a47b62f4542c53eb5da010c4
 }

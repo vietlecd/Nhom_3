@@ -1,6 +1,7 @@
 package com.javaweb.helpers.Sse;
 
 import com.javaweb.dto.FundingRateDTO;
+import com.javaweb.dto.KlineDTO;
 import com.javaweb.dto.PriceDTO;
 import com.javaweb.config.WebSocketConfig;
 import org.springframework.stereotype.Component;
@@ -51,7 +52,11 @@ public class SseHelper {
         return createSseEmitter(emitter, type, sendPriceTask, webSocketConfig);
     }
 
+<<<<<<< HEAD
     public SseEmitter createFundingRateSseEmitter(SseEmitter emitter, String type,
+=======
+    public SseEmitter createFundingRateSseEmitter(SseEmitter emitter, String type, String symbol,
+>>>>>>> 9afd360d4d882e38a47b62f4542c53eb5da010c4
                                                   Map<String, FundingRateDTO> fundingRateDataMap,
                                                   WebSocketConfig webSocketConfig) {
         Runnable sendFundingRateTask = () -> {
@@ -62,7 +67,28 @@ public class SseHelper {
             }
         };
 
+<<<<<<< HEAD
         return createSseEmitter(emitter, type, sendFundingRateTask, webSocketConfig);
+=======
+        return createSseEmitter(emitter, type, symbol, sendFundingRateTask, webSocketConfig);
+
+    }
+
+    public SseEmitter createKlineSseEmitter(SseEmitter emitter, String type, String symbol,
+                                            Map<String, KlineDTO> klineDataMap,
+                                            WebSocketConfig webSocketConfig) {
+        Runnable sendKlineTask = () -> {
+            try {
+                emitter.send(klineDataMap);
+            } catch (IOException e) {
+                emitter.completeWithError(e);
+            }
+        };
+
+        return createSseEmitter(emitter, type, symbol, sendKlineTask, webSocketConfig);
+
+    }
+>>>>>>> 9afd360d4d882e38a47b62f4542c53eb5da010c4
 
     }
 
