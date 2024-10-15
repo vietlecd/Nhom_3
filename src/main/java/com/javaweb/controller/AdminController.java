@@ -19,14 +19,15 @@ public class AdminController {
     @Autowired
     UserRepository userRepository;
 
-    @DeleteMapping("/admin/removeUserByUsername")
+    @DeleteMapping("/removeUserByUsername")
     public ResponseEntity<?> getUser(@RequestParam String username) {
         userData userData = userRepository.findByUsername(username);
         if(userData == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        userRepository.delete(userData);
+        userRepository.deleteByUsername(userData.getUsername());
+
         return new ResponseEntity<>(
                 new Responses(
                         new Date(),
@@ -36,8 +37,8 @@ public class AdminController {
                 HttpStatus.OK);
     }
 
-    @GetMapping("/admin/getAllUser")
-    public List<userData>  getAllUser() {
+    @GetMapping("/getAllUser")
+    public List<userData> getAllUser() {
         List<userData> userDataList = userRepository.findAll();
 
         return userDataList;
