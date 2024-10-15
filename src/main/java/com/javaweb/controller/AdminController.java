@@ -27,7 +27,7 @@ public class AdminController {
         }
 
         userRepository.deleteByUsername(userData.getUsername());
-        
+
         return new ResponseEntity<>(
                 new Responses(
                         new Date(),
