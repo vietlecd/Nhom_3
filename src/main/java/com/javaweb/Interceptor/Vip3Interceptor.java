@@ -25,7 +25,6 @@ public class Vip3Interceptor extends HandlerInterceptorAdapter {
 
         userData user = userRepository.findByUsername(username);
 
-        System.out.println(user);
         if(user.getVip_role() < 3) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Vip role không đáp ứng yêu cầu truy cập api!");
             return false;
