@@ -6,15 +6,13 @@ import com.javaweb.connect.impl.FutureWebSocketService;
 import com.javaweb.connect.impl.SpotWebSocketService;
 import com.javaweb.dto.FundingIntervalDTO;
 import com.javaweb.dto.FundingRateDTO;
+import com.javaweb.dto.IndicatorDTO;
 import com.javaweb.dto.PriceDTO;
 import com.javaweb.config.WebSocketConfig;
 import com.javaweb.helpers.sse.SseHelper;
 import com.javaweb.helpers.controller.UpperCaseHelper;
 import com.javaweb.helpers.trigger.TriggerCheckHelper;
-import com.javaweb.service.impl.FundingRateDataService;
-import com.javaweb.service.impl.FuturePriceDataService;
-import com.javaweb.service.impl.MarketCapService;
-import com.javaweb.service.impl.SpotPriceDataService;
+import com.javaweb.service.impl.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +51,9 @@ public class PriceController {
     private FundingRateWebSocketService fundingRateWebSocketService;
     @Autowired
     private FundingIntervalWebService fundingIntervalWebService;
+
+    @Autowired
+    private IndicatorService indicatorService;
 
     @GetMapping("/get-spot-price")
     public SseEmitter streamSpotPrices(@RequestParam List<String> symbols) {
@@ -108,6 +109,20 @@ public class PriceController {
         List<Map<String, Object>> marketData = marketCapService.getMarketData(symbols);
 
         return ResponseEntity.ok(marketData);
+    }
+
+    @GetMapping("/indicators")
+    public ResponseEntity<Map<String, IndicatorDTO>> getIndicators(
+            @RequestParam("symbols") List<String> symbols,
+            @RequestParam("indicators") List<String> indicators,
+            @RequestParam(value = "days", required = false, defaultValue = "1") int days) {
+        if (symbols == null || symbols.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Map<String, IndicatorDTO> indicatorDataMap = indicatorService.getIndicatorData(symbols, indicators, days);
+
+        return ResponseEntity.ok(indicatorDataMap);
     }
 
     @DeleteMapping("/close-websocket")
