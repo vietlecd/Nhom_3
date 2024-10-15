@@ -31,12 +31,37 @@ public class AuthController {
     private UserRepository userRepository;
 
     @GetMapping("/refreshToken")
-    public String refreshToken() {
-        return "test";
+    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String token = getCookieValue(request, "token");
+        if(token == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không tìm thấy token!");
+        }
+
+        LoginRequest loginRequest = CreateToken.decodeToken(token);
+        String username = loginRequest.getUsername();
+        String password = loginRequest.getPassword();
+
+        userData userData = userRepository.findByUsername(username);
+        List<String> ip_list = userData.getIp_list();
+
+        if(ip_list.contains( LoginFunc.getClientIp(request)) ) {
+            LoginFunc.setCookie(username, password, response);
+        }
+        else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Yêu cầu refresh token không hợp lệ vì tài khoản chưa được đăng nhập trên thiết bị này!");
+        }
+
+        return new ResponseEntity<>(
+                new Responses(
+                        new Date(),
+                        "200",
+                        "Yêu cầu refresh token thành công!",
+                        "auth/refreshToken"),
+                HttpStatus.OK);
     }
 
     @GetMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse res) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse res, HttpServletRequest request) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
 
@@ -44,6 +69,14 @@ public class AuthController {
         LoginFunc.checkUser(user);
         if (user.getPassword().equals(password)) {
             LoginFunc.setCookie(username, password, res);
+
+            if(!user.getIp_list().contains(LoginFunc.getClientIp(request))) {
+                List<String> ip_list = user.getIp_list();
+                ip_list.add(LoginFunc.getClientIp(request));
+                user.setIp_list(ip_list);
+
+                userRepository.save(user);
+            }
 
             return new ResponseEntity<>(
                     new Responses(
@@ -58,19 +91,22 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest req, HttpServletRequest res) {
-            RegisterFunc.bodyInformationCheck(req);
+    public ResponseEntity<?> register(@RequestBody RegisterRequest reg, HttpServletRequest req, HttpServletResponse res) {
+            RegisterFunc.bodyInformationCheck(reg);
 
+            List<String> ip_list = new ArrayList<>();
+            ip_list.add(LoginFunc.getClientIp(req));
             userData user = new userData(
-                    req.getUsername(),
-                    req.getName(),
-                    req.getPassword(),
-                    req.getEmail(),
+                    reg.getUsername(),
+                    reg.getName(),
+                    reg.getPassword(),
+                    reg.getEmail(),
                     0,
-                    LoginFunc.getClientIp(res)
+                    ip_list
             );
             RegisterFunc.checkUserAndEmail(user, userRepository);
 
+            LoginFunc.setCookie(user.getUsername(), user.getPassword(), res);
             userRepository.save(user);
             return new ResponseEntity<>(
                     new Responses(
@@ -97,7 +133,6 @@ public class AuthController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
     static class RegisterFunc {
         static void checkUserAndEmail(userData userData, UserRepository userRepository) {
             if(checkUser(userData.getUsername(), userRepository)) {
@@ -110,8 +145,16 @@ public class AuthController {
         }
 
         static void bodyInformationCheck(@RequestBody RegisterRequest req) {
-            if (req.getEmail() == null || req.getUsername() == null || req.getPassword() == null) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Không được bỏ trống thông tin!");
+            if(req.getEmail() == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa nhập địa chỉ Email");
+            }
+
+            if(req.getUsername() == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa nhập Username");
+            }
+
+            if(req.getPassword() == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa nhập Password");
             }
         }
 
@@ -124,9 +167,7 @@ public class AuthController {
         }
     }
     static class LoginFunc {
-        static List<String> getClientIp(HttpServletRequest request) {
-            List<String> list = new ArrayList<>();
-
+        static String getClientIp(HttpServletRequest request) {
             String ip = request.getHeader("x-forwarded-for");
             if (ip != null && !ip.isEmpty()) {
                 ip = ip.split(",")[0];
@@ -135,8 +176,7 @@ public class AuthController {
                 ip = request.getRemoteAddr();
             }
 
-            list.add(ip);
-            return list;
+            return ip;
         }
 
         static void checkUser(userData user) {
@@ -144,7 +184,6 @@ public class AuthController {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai tên đăng nhập hoặc mật khẩu");
             }
         }
-
         static void setCookie(String username, String password, HttpServletResponse res) {
             String token = CreateToken.createToken(username, password);
 
@@ -156,6 +195,18 @@ public class AuthController {
 
             res.addCookie(cookie);
         }
+    }
+
+    private String getCookieValue(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(cookieName)) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 
     @Data
